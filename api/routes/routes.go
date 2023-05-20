@@ -6,13 +6,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(r *gin.Engine) {
+func SetupRouter(router *gin.Engine) {
    // Authentication routes
-   r.POST("/auth/sign-in", handlers.SignInWithEmail)
-   r.POST("/auth/sign-in-jwt", handlers.SignInWithJwt)
-   r.POST("/auth/sign-up", handlers.SignUp)
-   r.GET("/auth/forgot-password", handlers.ForgotPassword)
+   authRoutes := router.Group("/auth")
+   {
+       authRoutes.POST("/sign-in", handlers.SignInWithEmail)
+       authRoutes.POST("/sign-in-jwt", handlers.SignInWithJwt)
+       authRoutes.POST("/sign-up", handlers.SignUp)
+       authRoutes.GET("/forgot-password", handlers.ForgotPassword)
+   }
+
 
    // Analytics routes
-   r.POST("/analytics/page-view", handlers.RecordPageView)
+   analyticsRoutes := router.Group("/analytics")
+   {
+       analyticsRoutes.POST("/page-view", handlers.RecordPageView)
+   }
 }

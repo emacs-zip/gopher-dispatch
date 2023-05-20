@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"gopher-dispatch/api/models"
-	"gopher-dispatch/api/models/dto"
-	"gopher-dispatch/api/services"
+	"gopher-dispatch/api/models/dto/request"
+	"gopher-dispatch/api/services/authentication"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,7 @@ func SignInWithEmail(c *gin.Context) {
         return
     }
 
-    user, token, err := services.SignInWithEmailService(data.Email, data.Password)
+    user, token, err := authenticationService.SignInWithEmail(data.Email, data.Password)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
     }
@@ -31,7 +30,7 @@ func SignInWithJwt(c *gin.Context) {
 		return
 	}
 
-	user, err := services.SignInWithJwtService(token)
+	user, err := authenticationService.SignInWithJwt(token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -41,13 +40,15 @@ func SignInWithJwt(c *gin.Context) {
 }
 
 func SignUp(c *gin.Context) {
-    var user models.User
-    if err := c.ShouldBindJSON(&user); err != nil {
+    var request dto.SignUpModel
+    if err := c.ShouldBindJSON(&request); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    if err := services.SignUpService(&user); err != nil {
+    user, err := authenticationService.SignUp(request.Email, request.Password)
+
+    if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error signing up user"})
         return
     }
@@ -62,7 +63,7 @@ func ForgotPassword(c *gin.Context) {
         return
     }
 
-    err := services.ForgotPassowrdService(data.Email)
+    err := authenticationService.ForgotPassowrd(data.Email)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist"})
     }
