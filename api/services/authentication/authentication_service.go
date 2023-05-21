@@ -44,26 +44,30 @@ func generateToken(user *models.User) (string, error) {
     return tokenString, nil
 }
 
-func SignInWithEmail(email string, password string) (*models.User, string, error) {
+func SignInWithEmail(email string, password string) (string, error) {
     user := &models.User{}
     if err := db.GetDB().Where("email = ?", email).First(user).Error; err != nil {
-        return nil, "", err
+        return "", err
+    }
+
+    if !user.Registered {
+        return "", errors.New("user must be registered to login")
     }
 
     err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
     if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-        return nil, "", errors.New("invalid login credentials")
+        return "", errors.New("invalid login credentials")
     }
 
     token, err := generateToken(user)
     if err != nil {
-        return nil, "", err
+        return "", err
     }
 
-    return user, token, nil
+    return token, nil
 }
 
-func SignInWithJwt(token string) (*models.User, error)  {
+func SignInWithJwt(token string) error  {
     // Yucky interface{}, but that's the docs
 	decodedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -74,20 +78,20 @@ func SignInWithJwt(token string) (*models.User, error)  {
 	})
 
     if err != nil {
-        return nil, fmt.Errorf("invalid JWT token: %w", err)
+        return fmt.Errorf("invalid JWT token: %w", err)
     }
 
 	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok && decodedToken.Valid {
 		userID := claims["user_id"].(string)
 		user := &models.User{}
 		if err := db.GetDB().Where("id = ?", userID).First(user).Error; err != nil {
-			return nil, err
+			return err
 		}
 
-		return user, nil
+		return nil
 	}
 
-    return &models.User{}, nil
+    return nil
 }
 
 func SignUp(email string, password string) (*models.User, error) {

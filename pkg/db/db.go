@@ -25,7 +25,7 @@ func init() {
     }
 
     db = conn
-    db.Debug().AutoMigrate(&models.AnalyticsEntry{}, &models.User{})
+    db.Debug().AutoMigrate(&models.PageViewEntry{}, &models.User{})
 }
 
 func GetDB() *gorm.DB {
