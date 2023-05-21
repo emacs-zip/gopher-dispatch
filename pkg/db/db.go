@@ -25,7 +25,19 @@ func init() {
     }
 
     db = conn
-    db.Debug().AutoMigrate(&models.PageViewEntry{}, &models.User{})
+    db.Debug().AutoMigrate(&models.PageViewEntry{}, &models.User{}, &models.Role{}, &models.UserRole{})
+
+    // Create a default role entry "user"
+    SetupDefaultRoles()
+}
+
+func SetupDefaultRoles() {
+    var count int
+    db.Model(&models.Role{}).Where("name = ?", "user").Count(&count)
+    if count == 0 {
+        userRole := models.Role{Name: "user"}
+        db.Create(&userRole)
+    }
 }
 
 func GetDB() *gorm.DB {

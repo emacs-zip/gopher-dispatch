@@ -17,12 +17,14 @@ func SetupRouter(router *gin.Engine) {
        authRoutes.GET("/forgot-password", handlers.ForgotPassword)
    }
 
-
    // Analytics routes
    analyticsRoutes := router.Group("/analytics")
    analyticsRoutes.Use(middleware.AuthRequired())
    {
        analyticsRoutes.POST("/page-view", handlers.RecordPageView)
+   }
+   analyticsRoutes.Use(middleware.AuthRequired(), middleware.RBAC("admin"))
+   {
        analyticsRoutes.GET("/page-view/:user_id", handlers.GetUserPageView)
    }
 }
