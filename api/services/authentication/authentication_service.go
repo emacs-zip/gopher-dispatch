@@ -103,8 +103,17 @@ func SignUp(email string, password string) (*models.User, error) {
         Password: string(hashedPassword),
     }
 
-    if result := db.GetDB().Create(&user); result.Error != nil {
-        return nil, result.Error
+    // Default new user roles to "user"
+    var role models.Role
+    db.GetDB().Where("name = ?", "user").First(&role)
+
+    userRole := &models.UserRole{UserID: user.ID, RoleID: role.ID}
+    if err := db.GetDB().Create(&userRole).Error; err != nil {
+        return nil, err
+    }
+
+    if err := db.GetDB().Create(&user).Error; err != nil {
+        return nil, err
     }
 
     // Begin kafka message to bucktooth-envoy.registration
