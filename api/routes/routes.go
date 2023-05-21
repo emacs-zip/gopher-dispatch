@@ -2,6 +2,7 @@ package routes
 
 import (
 	"gopher-dispatch/api/handlers"
+	"gopher-dispatch/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +20,7 @@ func SetupRouter(router *gin.Engine) {
 
    // Analytics routes
    analyticsRoutes := router.Group("/analytics")
+   analyticsRoutes.Use(middleware.AuthRequired())
    {
        analyticsRoutes.POST("/page-view", handlers.RecordPageView)
        analyticsRoutes.GET("/page-view/:user_id", handlers.GetUserPageView)
