@@ -6,4 +6,4 @@ Gopher Dispatch is a backend application for the emacs.zip project.
 
 To run Gopher Dispatch, first ensure you have installed `go`.
 
-Once installed, run `go run .` from the project root.
+Once installed, run `go run cmd/main.go` from the project root.
