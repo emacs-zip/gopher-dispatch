@@ -9,18 +9,19 @@ import (
 )
 
 func SignInWithEmail(c *gin.Context) {
-    var data dto.SignInModel
-    if err := c.ShouldBindJSON(&data); err != nil {
+    var request dto.SignInModel
+    if err := c.ShouldBindJSON(&request); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    user, token, err := authenticationService.SignInWithEmail(data.Email, data.Password)
+    token, err := authenticationService.SignInWithEmail(request.Email, request.Password)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+        return
     }
 
-    c.JSON(http.StatusOK, gin.H{"data": user, "token": token})
+    c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
 func SignInWithJwt(c *gin.Context) {
@@ -30,13 +31,13 @@ func SignInWithJwt(c *gin.Context) {
 		return
 	}
 
-	user, err := authenticationService.SignInWithJwt(token)
+	err := authenticationService.SignInWithJwt(token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func SignUp(c *gin.Context) {
@@ -57,13 +58,13 @@ func SignUp(c *gin.Context) {
 }
 
 func ForgotPassword(c *gin.Context) {
-    var data dto.ForgotPasswordModel
-    if err := c.ShouldBindJSON(&data); err != nil {
+    var request dto.ForgotPasswordModel
+    if err := c.ShouldBindJSON(&request); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    err := authenticationService.ForgotPassowrd(data.Email)
+    err := authenticationService.ForgotPassowrd(request.Email)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist"})
     }

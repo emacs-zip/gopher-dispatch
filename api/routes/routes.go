@@ -21,5 +21,6 @@ func SetupRouter(router *gin.Engine) {
    analyticsRoutes := router.Group("/analytics")
    {
        analyticsRoutes.POST("/page-view", handlers.RecordPageView)
+       analyticsRoutes.GET("/page-view/:user_id", handlers.GetUserPageView)
    }
 }
