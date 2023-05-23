@@ -8,6 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func SignUp(c *gin.Context) {
+    var request dto.SignUpModel
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    err := authenticationService.SignUp(request.Email, request.Password)
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error signing up user"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{})
+}
+
 func SignInWithEmail(c *gin.Context) {
     var request dto.SignInModel
     if err := c.ShouldBindJSON(&request); err != nil {
@@ -38,23 +55,6 @@ func SignInWithJwt(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
-}
-
-func SignUp(c *gin.Context) {
-    var request dto.SignUpModel
-    if err := c.ShouldBindJSON(&request); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    err := authenticationService.SignUp(request.Email, request.Password)
-
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error signing up user"})
-        return
-    }
-
-    c.JSON(http.StatusOK, gin.H{})
 }
 
 func ForgotPassword(c *gin.Context) {

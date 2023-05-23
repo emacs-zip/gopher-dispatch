@@ -1,4 +1,4 @@
-package analyticsService
+package analytics
 
 import (
 	"gopher-dispatch/api/models"
@@ -9,7 +9,7 @@ import (
 )
 
 func RecordPageView(userId uuid.UUID, page string, duration int) error {
-    analyticsEntry := models.PageViewEntry{
+    analyticsEntry := models.PageView{
         Id: uuid.New(),
         UserId: userId,
         Page: page,
@@ -24,8 +24,8 @@ func RecordPageView(userId uuid.UUID, page string, duration int) error {
     return nil
 }
 
-func GetUserPageView(userId string) ([]*models.PageViewEntry, error) {
-    var pageViewEntries []*models.PageViewEntry
+func GetUserPageView(userId string) ([]*models.PageView, error) {
+    var pageViewEntries []*models.PageView
     if err := db.GetDB().Where("user_id = ?", userId).Find(&pageViewEntries).Error; err != nil {
         return nil, err
     }
