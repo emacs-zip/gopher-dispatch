@@ -38,7 +38,7 @@ func AuthRequired() gin.HandlerFunc {
         }
 
         if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok && decodedToken.Valid {
-            c.Set("userID", claims["user_id"].(string))
+            c.Set("userId", claims["userId"].(string))
         } else {
             c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
             return

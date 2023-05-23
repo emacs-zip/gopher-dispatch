@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func RecordPageView(userID uuid.UUID, page string, duration int) error {
+func RecordPageView(userId uuid.UUID, page string, duration int) error {
     analyticsEntry := models.PageViewEntry{
-        ID: uuid.New(),
-        UserID: userID,
+        Id: uuid.New(),
+        UserId: userId,
         Page: page,
         TimeStamp: time.Now(),
         Duration: duration,
@@ -24,9 +24,9 @@ func RecordPageView(userID uuid.UUID, page string, duration int) error {
     return nil
 }
 
-func GetUserPageView(userID string) ([]*models.PageViewEntry, error) {
+func GetUserPageView(userId string) ([]*models.PageViewEntry, error) {
     var pageViewEntries []*models.PageViewEntry
-    if err := db.GetDB().Where("user_id = ?", userID).Find(&pageViewEntries).Error; err != nil {
+    if err := db.GetDB().Where("user_id = ?", userId).Find(&pageViewEntries).Error; err != nil {
         return nil, err
     }
 

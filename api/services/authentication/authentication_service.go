@@ -22,7 +22,7 @@ var secret = []byte("SuperCoolSecret!11!!")
 
 func generateToken(user *models.User) (string, error) {
     claims := models.JwtClaims{
-        ID: user.ID,
+        Id: user.Id,
         Email: user.Email,
         RegisteredClaims: jwt.RegisteredClaims{
         	Issuer:    "",
@@ -82,9 +82,9 @@ func SignInWithJwt(token string) error  {
     }
 
 	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok && decodedToken.Valid {
-		userID := claims["user_id"].(string)
+		userId := claims["user_id"].(string)
 		user := &models.User{}
-		if err := db.GetDB().Where("id = ?", userID).First(user).Error; err != nil {
+		if err := db.GetDB().Where("id = ?", userId).First(user).Error; err != nil {
 			return err
 		}
 
@@ -94,11 +94,11 @@ func SignInWithJwt(token string) error  {
     return nil
 }
 
-func SignUp(email string, password string) (*models.User, error) {
+func SignUp(email string, password string) error {
     hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
     user := models.User{
-        ID: uuid.New(),
+        Id: uuid.New(),
         Email: email,
         Password: string(hashedPassword),
     }
@@ -107,13 +107,13 @@ func SignUp(email string, password string) (*models.User, error) {
     var role models.Role
     db.GetDB().Where("name = ?", "user").First(&role)
 
-    userRole := &models.UserRole{UserID: user.ID, RoleID: role.ID}
+    userRole := &models.UserRole{UserId: user.Id, RoleId: role.Id}
     if err := db.GetDB().Create(&userRole).Error; err != nil {
-        return nil, err
+        return err
     }
 
     if err := db.GetDB().Create(&user).Error; err != nil {
-        return nil, err
+        return err
     }
 
     // Begin kafka message to bucktooth-envoy.registration
@@ -144,7 +144,7 @@ func SignUp(email string, password string) (*models.User, error) {
 
     writer.Close()*/
 
-    return &user, nil
+    return nil
 }
 
 func ForgotPassowrd(email string) error  {

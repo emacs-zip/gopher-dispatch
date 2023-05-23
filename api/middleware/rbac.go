@@ -9,14 +9,14 @@ import (
 
 func RBAC(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("userID")
+		userId, exists := c.Get("userId")
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 			return
 		}
 
 		user := &models.User{}
-		db.GetDB().Preload("Roles").Where("id = ?", userID).First(user)
+		db.GetDB().Preload("Roles").Where("id = ?", userId).First(user)
 
 		for _, role := range user.Roles {
 			if role.Name == requiredRole {

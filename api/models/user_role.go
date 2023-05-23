@@ -5,6 +5,6 @@ import (
 )
 
 type UserRole struct {
-    UserID uuid.UUID `gorm:"type:uuid;primary_key"`
-    RoleID uuid.UUID `gorm:"type:uuid;primary_key"`
+    UserId uuid.UUID `gorm:"type:uuid;primary_key"`
+    RoleId uuid.UUID `gorm:"type:uuid;primary_key"`
 }

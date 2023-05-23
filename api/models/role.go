@@ -6,12 +6,12 @@ import (
 )
 
 type Role struct {
-    ID       uuid.UUID  `gorm:"type:uuid;primary_key"`
+    Id       uuid.UUID  `gorm:"type:uuid;primary_key"`
     Name     string     `gorm:"type:varchar(30)"`
-    UserRole []UserRole `gorm:"foreignKey:RoleID;references:ID"`
+    UserRole []UserRole `gorm:"foreignKey:RoleId;references:Id"`
 }
 
 func (role *Role) BeforeCreate(scope *gorm.Scope) error {
     uuid := uuid.New()
-    return scope.SetColumn("ID", uuid)
+    return scope.SetColumn("Id", uuid)
 }

@@ -47,14 +47,14 @@ func SignUp(c *gin.Context) {
         return
     }
 
-    user, err := authenticationService.SignUp(request.Email, request.Password)
+    err := authenticationService.SignUp(request.Email, request.Password)
 
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error signing up user"})
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"data": user})
+    c.JSON(http.StatusOK, gin.H{})
 }
 
 func ForgotPassword(c *gin.Context) {

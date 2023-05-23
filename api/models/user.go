@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-    ID         uuid.UUID  `gorm:"type:uuid;primary_key;"`
+    Id         uuid.UUID  `gorm:"type:uuid;primary_key;"`
     Email      string     `gorm:"type:varchar(100);unique_index"`
     Password   string     `gorm:"type:varchar(100)"`
     Roles      []Role     `gorm:"many2many:user_roles;association_foreignkey:ID;foreignkey:ID"`

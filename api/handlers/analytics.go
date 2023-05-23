@@ -15,7 +15,7 @@ func RecordPageView(c *gin.Context) {
         return
     }
 
-    if err := analyticsService.RecordPageView(request.UserID, request.Page, request.Duration); err != nil {
+    if err := analyticsService.RecordPageView(request.UserId, request.Page, request.Duration); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error recording analytics data"})
     }
 
@@ -23,9 +23,9 @@ func RecordPageView(c *gin.Context) {
 }
 
 func GetUserPageView(c *gin.Context) {
-    userID := c.Param("user_id")
+    userId := c.Param("userId")
 
-    pageViewData, err := analyticsService.GetUserPageView(userID)
+    pageViewData, err := analyticsService.GetUserPageView(userId)
 
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to get user page view data"})
