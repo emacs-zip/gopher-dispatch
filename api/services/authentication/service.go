@@ -1,4 +1,4 @@
-package authenticationService
+package authentication
 
 import (
 	//"context"
@@ -6,24 +6,75 @@ import (
 	"errors"
 	"fmt"
 	"gopher-dispatch/api/models"
+	"gopher-dispatch/api/models/dto"
+	"strings"
+
 	//"gopher-dispatch/api/models/dto/kafka"
+	"gopher-dispatch/pkg/config"
 	"gopher-dispatch/pkg/db"
+
 	//"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
 	//"github.com/segmentio/kafka-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// temp secret, will be handled through env var later. docker, proper deployment, yada
-var secret = []byte("SuperCoolSecret!11!!")
+func createUser(email string, password string, tenantID uuid.UUID, admin bool) error {
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    if err != nil {
+        return err
+    }
+
+    // Create new user
+    userID := uuid.New()
+    user := &models.User {
+        ID: userID,
+        Email: email,
+        Password: string(hashedPassword),
+        Registered: true, // TODO: Default to false, send kafka message to envoy
+        TenantID: tenantID,
+    }
+
+    if err := db.GetDB().Create(&user).Error; err != nil {
+        fmt.Println("user error")
+        fmt.Println(err)
+        return err
+    }
+
+    defaultAttr := "user"
+    if admin {
+        defaultAttr = "admin"
+    }
+
+    // Find default role attribute
+    roleAttr := &models.Attribute{}
+    if err := db.GetDB().Where("value = ?", defaultAttr).First(&roleAttr).Error; err != nil {
+        return err
+    }
+
+    // Assign default attribute to user
+    userAttr := &models.UserAttribute{
+        ID: uuid.New(),
+        UserID: userID,
+        AttributeID: roleAttr.ID,
+    }
+
+    if err := db.GetDB().Create(&userAttr).Error; err != nil {
+        return err
+    }
+
+    return nil
+}
 
 func generateToken(user *models.User) (string, error) {
-    claims := models.JwtClaims{
-        Id: user.Id,
+    claims := dto.JwtClaims{
+        UserID: user.ID,
         Email: user.Email,
+        TenantID: user.TenantID,
         RegisteredClaims: jwt.RegisteredClaims{
         	Issuer:    "",
         	Subject:   "",
@@ -36,7 +87,7 @@ func generateToken(user *models.User) (string, error) {
     }
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-    tokenString, err := token.SignedString(secret)
+    tokenString, err := token.SignedString([]byte(config.Get().JWTSecret))
     if err != nil {
         return "", err
     }
@@ -67,24 +118,32 @@ func SignInWithEmail(email string, password string) (string, error) {
     return token, nil
 }
 
-func SignInWithJwt(token string) error  {
-    // Yucky interface{}, but that's the docs
-	decodedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
+func SignInWithJwt(authHeader string) error  {
+        const BearerSchema = "Bearer "
 
-		return []byte(secret), nil
-	})
+        // check if Authorization header is correctly formatted
+        if !strings.HasPrefix(authHeader, BearerSchema) {
+            return nil
+        }
+
+        token := authHeader[len(BearerSchema):]
+
+        decodedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+            }
+
+            return []byte(config.Get().JWTSecret), nil
+        })
 
     if err != nil {
         return fmt.Errorf("invalid JWT token: %w", err)
     }
 
 	if claims, ok := decodedToken.Claims.(jwt.MapClaims); ok && decodedToken.Valid {
-		userId := claims["user_id"].(string)
+		userID := claims["userID"].(string)
 		user := &models.User{}
-		if err := db.GetDB().Where("id = ?", userId).First(user).Error; err != nil {
+		if err := db.GetDB().Where("id = ?", userID).First(user).Error; err != nil {
 			return err
 		}
 
@@ -95,24 +154,32 @@ func SignInWithJwt(token string) error  {
 }
 
 func SignUp(email string, password string) error {
-    hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
-    user := models.User{
-        Id: uuid.New(),
-        Email: email,
-        Password: string(hashedPassword),
+    // Create a tenant
+    tenant := &models.Tenant{
+        ID: uuid.New(),
+        Name: email,
+        UserLimit: 10,
     }
 
-    // Default new user roles to "user"
-    var role models.Role
-    db.GetDB().Where("name = ?", "user").First(&role)
-
-    userRole := &models.UserRole{UserId: user.Id, RoleId: role.Id}
-    if err := db.GetDB().Create(&userRole).Error; err != nil {
+    if err := db.GetDB().Create(&tenant).Error; err != nil {
         return err
     }
 
-    if err := db.GetDB().Create(&user).Error; err != nil {
+    err := createUser(email, password, tenant.ID, true)
+    if err != nil {
+        return err
+    }
+
+    // Create default policy linked to new tenant
+    policy := models.Policy{
+        ID: uuid.New(),
+        Subject: "admin",
+        Object: "/page-view",
+        Effect: "allow",
+        TenantID: tenant.ID,
+    }
+
+    if err := db.GetDB().Create(&policy).Error; err != nil {
         return err
     }
 

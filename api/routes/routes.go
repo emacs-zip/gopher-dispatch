@@ -7,8 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
 func SetupRouter(router *gin.Engine) {
-    // Authentication routes
+    // Authentication
     authRoutes := router.Group("/auth")
     {
         authRoutes.POST("/sign-up", handlers.SignUp)
@@ -17,90 +18,65 @@ func SetupRouter(router *gin.Engine) {
         authRoutes.GET("/forgot-password", handlers.ForgotPassword)
     }
 
-    // Analytics routes
+    // Analytics
     analyticsRoutes := router.Group("/analytics")
-    analyticsRoutes.Use(middleware.AuthRequired())
+    analyticsRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
         analyticsRoutes.POST("/page-view", handlers.RecordPageView)
     }
-    analyticsRoutes.Use(middleware.AuthRequired(), middleware.RBAC("admin"))
+    analyticsRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
-        analyticsRoutes.GET("/page-view/:user_id", handlers.GetUserPageView)
+        analyticsRoutes.GET("/page-view/:userID", handlers.GetUserPageView)
     }
 
-    // Policies routes
-    policiesRoutes := router.Group("/policies")
-    policiesRoutes.Use(middleware.AuthRequired())
+    // User routes
+    userRoutes := router.Group("/users")
+    userRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
-        policiesRoutes.GET("", handlers.GetAllPolicies)
-        policiesRoutes.GET("/:id", handlers.GetPolicyByID)
-        policiesRoutes.POST("", handlers.CreatePolicy)
-        policiesRoutes.PUT("/:id", handlers.UpdatePolicy)
-        policiesRoutes.DELETE("/:id", handlers.DeletePolicy)
-
-        policiesRulesRoutes := policiesRoutes.Group("/:id/rules")
-        {
-            policiesRulesRoutes.GET("", handlers.GetPolicyRules)
-            policiesRulesRoutes.POST("", handlers.AddPolicyRule)
-            policiesRulesRoutes.PUT("/:ruleId", handlers.UpdatePolicyRule)
-            policiesRulesRoutes.DELETE("/:ruleId", handlers.DeletePolicyRule)
-        }
+        userRoutes.GET("", handlers.GetUsers)
+        userRoutes.GET("/:id", handlers.GetUser)
+        userRoutes.POST("", handlers.CreateUser)
+        userRoutes.PUT("/:id", handlers.UpdateUser)
+        userRoutes.DELETE("/:id", handlers.DeleteUser)
+        userRoutes.GET("/:id/attributes", handlers.GetUserAttributes)
+        userRoutes.GET("/:id/attributes/:attributeId", handlers.GetUserAttribute)
+        userRoutes.POST("/:id/attributes", handlers.AddUserAttribute)
+        userRoutes.PUT("/:id/attributes/:attributeId", handlers.UpdateUserAttribute)
+        userRoutes.DELETE("/:id/attributes/:attributeId", handlers.DeleteUserAttribute)
     }
 
-    // Resources routes
-    resourcesRoutes := router.Group("/resources")
-    resourcesRoutes.Use(middleware.AuthRequired())
+    // Attribute routes
+    attributeRoutes := router.Group("/attributes")
+    attributeRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
-        resourcesRoutes.GET("", handlers.GetAllResources)
-        resourcesRoutes.GET("/:id", handlers.GetResourceByID)
-        resourcesRoutes.POST("", handlers.CreateResource)
-        resourcesRoutes.PUT("/:id", handlers.UpdateResource)
-        resourcesRoutes.DELETE("/:id", handlers.DeleteResource)
-
-        resourcesAttributesRoutes := resourcesRoutes.Group("/:id/attributes")
-        {
-            resourcesAttributesRoutes.GET("", handlers.GetResourceAttributes)
-            resourcesAttributesRoutes.POST("", handlers.AddResourceAttribute)
-            resourcesAttributesRoutes.PUT("/:attributeId", handlers.UpdateResourceAttribute)
-            resourcesAttributesRoutes.DELETE("/:attributeId", handlers.DeleteResourceAttribute)
-        }
+        attributeRoutes.GET("", handlers.GetAttributes)
+        attributeRoutes.GET("/:id", handlers.GetAttribute)
+        attributeRoutes.POST("", handlers.CreateAttribute)
+        attributeRoutes.PUT("/:id", handlers.UpdateAttribute)
+        attributeRoutes.DELETE("/:id", handlers.DeleteAttribute)
     }
 
-    // Roles routes
-    rolesRoutes := router.Group("/roles")
-    rolesRoutes.Use(middleware.AuthRequired())
+    // Policy routes
+    policyRoutes := router.Group("/policies")
+    policyRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
-        rolesRoutes.GET("", handlers.GetAllRoles)
-        rolesRoutes.GET("/:id", handlers.GetRoleByID)
-        rolesRoutes.POST("", handlers.CreateRole)
-        rolesRoutes.PUT("/:id", handlers.UpdateRole)
-        rolesRoutes.DELETE("/:id", handlers.DeleteRole)
-
-        rolesAttributesRoutes := rolesRoutes.Group("/:id/attributes")
-        {
-            rolesAttributesRoutes.GET("", handlers.GetRoleAttributes)
-            rolesAttributesRoutes.POST("", handlers.AddRoleAttribute)
-            rolesAttributesRoutes.PUT("/:attributeId", handlers.UpdateRoleAttribute)
-            rolesAttributesRoutes.DELETE("/:attributeId", handlers.DeleteRoleAttribute)
-        }
+        policyRoutes.GET("", handlers.GetPolicies)
+        policyRoutes.GET("/:id", handlers.GetPolicy)
+        policyRoutes.POST("", handlers.CreatePolicy)
+        policyRoutes.PUT("/:id", handlers.UpdatePolicy)
+        policyRoutes.DELETE("/:id", handlers.DeletePolicy)
     }
 
-    // Users routes
-    usersRoutes := router.Group("/users")
-    usersRoutes.Use(middleware.AuthRequired())
+    // Tenant routes
+    tenantRoutes := router.Group("/tenants")
+    tenantRoutes.Use(middleware.AuthRequired(), middleware.ABAC())
     {
-        usersRoutes.GET("", handlers.GetAllUsers)
-        usersRoutes.GET("/:id", handlers.GetUserByID)
-        usersRoutes.POST("", handlers.CreateUser)
-        usersRoutes.PUT("/:id", handlers.UpdateUser)
-        usersRoutes.DELETE("/:id", handlers.DeleteUser)
-
-        usersRoutes.POST("/:id/roles", handlers.AssignRoleToUser)
-        usersRoutes.POST("/:id/resources", handlers.AssignResourceToUser)
-        usersRoutes.POST("/:id/policies", handlers.AssignPolicyToUser)
-
-        usersRoutes.DELETE("/:id/roles/:roleId", handlers.RemoveRoleFromUser)
-        usersRoutes.DELETE("/:id/resources/:resourceId", handlers.RemoveResourceFromUser)
-        usersRoutes.DELETE("/:id/policies/:policyId", handlers.RemovePolicyFromUser)
+        tenantRoutes.GET("", handlers.GetTenants)
+        tenantRoutes.GET("/:id", handlers.GetTenant)
+        tenantRoutes.POST("", handlers.CreateTenant)
+        tenantRoutes.PUT("/:id", handlers.UpdateTenant)
+        tenantRoutes.DELETE("/:id", handlers.DeleteTenant)
+        tenantRoutes.GET("/:id/users", handlers.GetTenantUsers)
+        tenantRoutes.GET("/:id/policies", handlers.GetTenantPolicies)
     }
 }

@@ -1,4 +1,4 @@
-package models
+package dto
 
 import (
 	"github.com/golang-jwt/jwt/v5"
@@ -6,7 +6,8 @@ import (
 )
 
 type JwtClaims struct {
-    Id uuid.UUID `json:"userId"`
+    UserID uuid.UUID `json:"userID"`
     Email string `json:"email"`
+    TenantID uuid.UUID `json:"tenantID"`
     jwt.RegisteredClaims
 }

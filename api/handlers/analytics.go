@@ -9,13 +9,13 @@ import (
 )
 
 func RecordPageView(c *gin.Context) {
-    var request dto.RecordPageViewModel
+    var request request.RecordPageViewModel
     if err := c.ShouldBindJSON(&request); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
-    if err := analyticsService.RecordPageView(request.UserId, request.Page, request.Duration); err != nil {
+    if err := analytics.RecordPageView(request.UserID, request.Page, request.Duration); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error recording analytics data"})
     }
 
@@ -23,9 +23,9 @@ func RecordPageView(c *gin.Context) {
 }
 
 func GetUserPageView(c *gin.Context) {
-    userId := c.Param("userId")
+    userID := c.Param("userID")
 
-    pageViewData, err := analyticsService.GetUserPageView(userId)
+    pageViewData, err := analytics.GetUserPageView(userID)
 
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to get user page view data"})

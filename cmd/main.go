@@ -8,8 +8,6 @@ import (
 )
 
 func main() {
-    // TODO: logrus
-
     db := db.GetDB()
     defer db.Close()
 
