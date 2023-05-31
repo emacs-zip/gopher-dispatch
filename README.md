@@ -9,7 +9,7 @@ Gopher Dispatch is a backend application for the emacs.zip project.
 - [x] Basic RBAC (precursor to ABAC)
 - [x] ABAC
 - [x] ABAC management through endpoints
-- [-] Analytics
+- [ ] Analytics
 - - [x] Page View
 - - [ ] Clicks
 - - [ ] Etc(?)
